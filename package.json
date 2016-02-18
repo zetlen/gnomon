@@ -4,7 +4,7 @@
   "description": "CLI to prepend stdin lines with a timestamp",
   "main": "index.js",
   "bin": {
-    "gnomon": "./index.js"
+    "gnomon": "./bin/cli.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
