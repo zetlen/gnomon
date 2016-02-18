@@ -1,17 +1,17 @@
 {
-  "name": "time-output",
+  "name": "gnomon",
   "version": "1.0.0",
   "description": "CLI to prepend stdin lines with a timestamp",
   "main": "index.js",
   "bin": {
-    "time-output": "./index.js"
+    "gnomon": "./index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/zetlen/node-time-output"
+    "url": "https://github.com/zetlen/gnomon"
   },
   "keywords": [
     "time",
@@ -22,9 +22,9 @@
   "author": "zetlen",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/zetlen/node-time-output/issues"
+    "url": "https://github.com/zetlen/gnomon/issues"
   },
-  "homepage": "https://github.com/zetlen/node-time-output",
+  "homepage": "https://github.com/zetlen/gnomon",
   "dependencies": {
     "chalk": "^1.1.1",
     "dateutil": "^0.1.0",
