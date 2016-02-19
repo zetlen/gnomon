@@ -8,22 +8,26 @@ module.exports = function(opts) {
   var newline = '\n';
   var space = ' ';
   var sAbbr = 's';
-  var places = 3;
+  var places = 4;
   var maxDurLen = 5 + places; // four digits of seconds, decimal place, places
   var spacePads = [space,'  ','   '];
-  var start = (new Date()).getTime();
+  var start = process.hrtime();
+  var elapsed = start;
+  var elapsedTotal = start;
   var last = start;
-  var now = start;
-  var elapsed = 0;
   var leftBar = chalk.dim('[');
   var rightBar = chalk.dim(']');
-  function tick() {
-    now = (new Date()).getTime();
-    elapsed = now - last;
-    last = now;
+  var nanoPow = Math.pow(10,9);
+  function durationToSeconds(dur) {
+    return dur[0] + dur[1] / nanoPow;
   }
-  function formatDuration(duration) {
-    return (duration / 1000).toFixed(3) + sAbbr;
+  function tick() {
+    elapsed = process.hrtime(last);
+    elapsedTotal = process.hrtime(start);
+    last = process.hrtime();
+  }
+  function formatDuration(dur) {
+    return durationToSeconds(dur).toFixed(places) + sAbbr;
   }
   function padFor(s) {
     var l = s.length;
@@ -38,7 +42,7 @@ module.exports = function(opts) {
       return formatDuration(elapsed);
     },
     'elapsed-total': function() {
-      return formatDuration(now - start);
+      return formatDuration(elapsedTotal);
     },
     'absolute': function() {
       return dateutil.format(new Date(), fmt);
@@ -46,28 +50,29 @@ module.exports = function(opts) {
   })[opts.type || 'elapsed-line'];
 
   var colorStamp;
-  var high = opts.high && opts.high * 1000;
-  var medium = opts.medium && opts.medium * 1000;
+  var high = opts.high;
+  var medium = opts.medium;
   if (medium && high) {
     colorStamp = function() {
-      if (elapsed >= high) {
+      var seconds = durationToSeconds(elapsed);
+      if (seconds >= high) {
         return chalk.reset.red(createStampTime());
       }
-      if (elapsed >= medium) {
+      if (seconds >= medium) {
         return chalk.reset.yellow(createStampTime());
       }
       return chalk.reset.green(createStampTime());
     };
   } else if (medium) {
     colorStamp = function() {
-      if (elapsed >= medium) {
+      if (durationToSeconds(elapsed) >= medium) {
         return chalk.reset.yellow(createStampTime());
       }
       return chalk.reset.green(createStampTime());
     }
   } else if (high) {
     colorStamp  = function() {
-      if (elapsed >= high) {
+      if (durationToSeconds(elapsed) >= high) {
         return chalk.reset.red(createStampTime());
       }
       return chalk.reset.green(createStampTime());
