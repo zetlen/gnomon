@@ -37,7 +37,7 @@ module.exports = function(opts) {
     return stamp + line + newline;
   }
 
-  var createStampTime = ({
+  var stampers = {
     'elapsed-line': function() {
       return formatDuration(elapsed);
     },
@@ -47,7 +47,9 @@ module.exports = function(opts) {
     'absolute': function() {
       return dateutil.format(new Date(), fmt);
     }
-  })[opts.type || 'elapsed-line'];
+  };
+
+  var createStampTime = stampers[opts.type] || stampers['elapsed-line'];
 
   var colorStamp;
   var high = opts.high;
