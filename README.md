@@ -70,3 +70,10 @@ or yellow. And you can do a few other things, too.
 
 If a `high` and/or a `medium` threshold are specified, then all timestamps not
 meeting that threshold will be colored bright green.
+
+## Installation
+
+with npm do:
+```
+npm install -g gnomon
+```
