@@ -5,7 +5,7 @@ var argv = require('minimist')(process.argv.slice(2), {
   alias: {
     'format': 'f',
     'type': 't',
-    'ignoreBlank': ['ignore-blank','quiet','q'],
+    'ignoreBlank': ['ignore-blank','quiet','q','i'],
     'high': 'h',
     'medium': 'm'
   }
