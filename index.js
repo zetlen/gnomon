@@ -4,76 +4,97 @@ var through = require('through');
 
 module.exports = function(opts) {
   var fmt = opts.format || 'H:i:s.u O';
-  var zeroPads = ['0','00','000'];
+  var nullString = '';
+  var newline = '\n';
+  var space = ' ';
+  var sAbbr = 's';
+  var places = 3;
+  var maxDurLen = 5 + places; // four digits of seconds, decimal place, places
+  var spacePads = [space,'  ','   '];
   var start = (new Date()).getTime();
   var last = start;
   var now = start;
   var elapsed = 0;
+  var leftBar = chalk.dim('[');
+  var rightBar = chalk.dim(']');
   function tick() {
     now = (new Date()).getTime();
     elapsed = now - last;
     last = now;
   }
   function formatDuration(duration) {
-    var s = (duration / 1000).toFixed(3);
-    var l = s.length;
-    var pad = l < 8 ? zeroPads[7 - l] : '';
-    return pad + s;
+    return (duration / 1000).toFixed(3) + sAbbr;
   }
-  function formatStamp(stamp) {
-    return '[' + stamp + ']';
+  function padFor(s) {
+    var l = s.length;
+    return l < maxDurLen ? spacePads[maxDurLen - 1 - l] : nullString;
   }
   function stampLine(stamp, line) {
-    return stamp + ' ' + line + '\n';
+    return stamp + line + newline;
   }
 
   var createStampTime = ({
     'elapsed-line': function() {
-      return formatStamp(formatDuration(elapsed));
+      return formatDuration(elapsed);
     },
     'elapsed-total': function() {
-      return formatStamp(formatDuration(now - start));
+      return formatDuration(now - start);
     },
     'absolute': function() {
-      return formatStamp(dateutil.format(new Date(), fmt));
+      return dateutil.format(new Date(), fmt);
     }
   })[opts.type || 'elapsed-line'];
 
-  var createStamp;
-  if (opts.medium && opts.high) {
-    createStamp = function() {
-      if (elapsed >= opts.high) {
+  var colorStamp;
+  var high = opts.high && opts.high * 1000;
+  var medium = opts.medium && opts.medium * 1000;
+  if (medium && high) {
+    colorStamp = function() {
+      if (elapsed >= high) {
         return chalk.reset.red(createStampTime());
       }
-      if (elapsed >= opts.medium) {
+      if (elapsed >= medium) {
         return chalk.reset.yellow(createStampTime());
       }
       return chalk.reset.green(createStampTime());
     };
-  } else if (opts.medium) {
-    createStamp = function() {
-      if (elapsed >= opts.medium) {
+  } else if (medium) {
+    colorStamp = function() {
+      if (elapsed >= medium) {
         return chalk.reset.yellow(createStampTime());
       }
       return chalk.reset.green(createStampTime());
     }
-  } else if (opts.high) {
-    createStamp = function() {
-      if (elapsed >= opts.high) {
+  } else if (high) {
+    colorStamp  = function() {
+      if (elapsed >= high) {
         return chalk.reset.red(createStampTime());
       }
       return chalk.reset.green(createStampTime());
     }
   } else {
-    createStamp = function() {
+    colorStamp = function() {
       return chalk.reset(createStampTime());
     }
   }
 
+  var formatStamp = (opts.type === 'absolute')
+    ? function(s) {
+      return space + leftBar + colorStamp(s) + rightBar + space;
+    }
+    : function(s) {
+      return space + padFor(s) + leftBar + colorStamp(s) + rightBar + space;
+    };
+
   var lastLine = false;
 
   var feed = function(stream) {
-    stream.queue(stampLine(createStamp(), lastLine));
+    stream.queue(
+      stampLine(
+        formatStamp(createStampTime()),
+        lastLine
+      )
+    );
   }
 
   var write = function (stream, data) {
