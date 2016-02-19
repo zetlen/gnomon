@@ -9,14 +9,14 @@ module.exports = function(opts) {
   var space = ' ';
   var sAbbr = 's';
   var places = 4;
-  var maxDurLen = 5 + places; // four digits of seconds, decimal place, places
+  var maxDurLen = 6 + places; // up to 9999.9999s
   var spacePads = [space,'  ','   '];
   var start = process.hrtime();
   var elapsed = start;
   var elapsedTotal = start;
   var last = start;
-  var leftBar = chalk.dim('[');
-  var rightBar = chalk.dim(']');
+  var bar = chalk.inverse(' ');
+  var spacedBar = space + bar + space;
   var nanoPow = Math.pow(10,9);
   function durationToSeconds(dur) {
     return dur[0] + dur[1] / nanoPow;
@@ -87,11 +87,22 @@ module.exports = function(opts) {
 
   var formatStamp = (opts.type === 'absolute')
     ? function(s) {
-      return space + leftBar + colorStamp(s) + rightBar + space;
+      function fmt(s) {
+        return spacedBar + colorStamp(s) + spacedBar;
+      }
+      // hack to detect the length of the timestamp and then optimize
+      blankBarLine =
+        spacedBar + Array(s.length + 1).join(space) + spacedBar + newline;
+      formatStamp = fmt;
+      return fmt(s);
     }
     : function(s) {
-      return space + padFor(s) + leftBar + colorStamp(s) + rightBar + space;
+      return space + bar + padFor(s) + colorStamp(s) + spacedBar;
     };
+
+  var blankBarLine = (opts.type === 'absolute')
+    ? newline
+    : spacedBar + Array(maxDurLen).join(space) + spacedBar + newline;
 
   var lastLine = false;
 
@@ -111,7 +122,7 @@ module.exports = function(opts) {
   }
 
   var onData = (opts.ignoreBlank)
-    ? function (data) { data ? write(this, data) : this.queue('\n'); }
+    ? function (data) { data ? write(this, data) : this.queue(blankBarLine); }
     : function (data) { write(this, data); };
 
   return through(onData, function end () { feed(this); });
