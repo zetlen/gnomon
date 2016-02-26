@@ -18,7 +18,7 @@ module.exports = function(opts) {
   var last = start;
   var bar = chalk.reset.inverse(' ');
   var spacedBar = space + bar + space;
-  var blank = spacedBar + Array(maxDurLen).join(space) + spacedBar;
+  var blank = Array(maxDurLen).join(space) + spacedBar;
   var maxLineLength = termwidth - chalk.stripColor(blank).length;
   var nanoPow = Math.pow(10,9);
   function durationToSeconds(dur) {
@@ -95,16 +95,16 @@ module.exports = function(opts) {
   var formatStamp = (opts.type === 'absolute')
     ? function(s) {
       function fmt(s) {
-        return spacedBar + colorStamp(s) + spacedBar;
+        return colorStamp(s) + spacedBar;
       }
       // hack to detect the length of the timestamp and then optimize
-      blank = spacedBar + Array(s.length + 1).join(space) + spacedBar;
+      blank = Array(s.length + 1).join(space) + spacedBar;
       maxLineLength = termwidth - chalk.stripColor(blank).length;
       formatStamp = fmt;
       return fmt(s);
     }
     : function(s) {
-      return space + bar + padFor(s) + colorStamp(s) + spacedBar;
+      return padFor(s) + colorStamp(s) + spacedBar;
     };
 
 
