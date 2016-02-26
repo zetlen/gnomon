@@ -1,6 +1,7 @@
 var dateutil = require('dateutil');
 var chalk = require('chalk');
 var through = require('through');
+var termwidth = require('window-size').width;
 
 module.exports = function(opts) {
   var fmt = opts.format || 'H:i:s.u O';
@@ -15,8 +16,10 @@ module.exports = function(opts) {
   var elapsed = start;
   var elapsedTotal = start;
   var last = start;
-  var bar = chalk.inverse(' ');
+  var bar = chalk.reset.inverse(' ');
   var spacedBar = space + bar + space;
+  var blank = spacedBar + Array(maxDurLen).join(space) + spacedBar;
+  var maxLineLength = termwidth - chalk.stripColor(blank).length;
   var nanoPow = Math.pow(10,9);
   function durationToSeconds(dur) {
     return dur[0] + dur[1] / nanoPow;
@@ -34,6 +37,10 @@ module.exports = function(opts) {
     return l < maxDurLen ? spacePads[maxDurLen - 1 - l] : nullString;
   }
   function stampLine(stamp, line) {
+    if (chalk.stripColor(line).length > maxLineLength) {
+      return stamp + line.slice(0, maxLineLength) + newline +
+        stampLine(blank, line.slice(maxLineLength));
+    }
     return stamp + line + newline;
   }
 
@@ -91,8 +98,8 @@ module.exports = function(opts) {
         return spacedBar + colorStamp(s) + spacedBar;
       }
       // hack to detect the length of the timestamp and then optimize
-      blankBarLine =
-        spacedBar + Array(s.length + 1).join(space) + spacedBar + newline;
+      blank = spacedBar + Array(s.length + 1).join(space) + spacedBar;
+      maxLineLength = termwidth - chalk.stripColor(blank).length;
       formatStamp = fmt;
       return fmt(s);
     }
@@ -100,30 +107,27 @@ module.exports = function(opts) {
       return space + bar + padFor(s) + colorStamp(s) + spacedBar;
     };
 
-  var blankBarLine = (opts.type === 'absolute')
-    ? newline
-    : spacedBar + Array(maxDurLen).join(space) + spacedBar + newline;
 
-  var lastLine = false;
+    var lastLine = false;
 
-  var feed = function(stream) {
-    stream.queue(
-      stampLine(
-        formatStamp(createStampTime()),
-        lastLine
-      )
-    );
-  }
+    var feed = function(stream) {
+      stream.queue(
+        stampLine(
+          formatStamp(createStampTime()),
+          lastLine
+        )
+      );
+    }
 
-  var write = function (stream, data) {
-    tick();
-    if (lastLine !== false) feed(stream);
-    lastLine = data;
-  }
+    var write = function (stream, data) {
+      tick();
+      if (lastLine !== false) feed(stream);
+      lastLine = data;
+    }
 
-  var onData = (opts.ignoreBlank)
-    ? function (data) { data ? write(this, data) : this.queue(blankBarLine); }
-    : function (data) { write(this, data); };
+    var onData = (opts.ignoreBlank)
+      ? function (l) { l ? write(this, l) : this.queue(blank + newline); }
+      : function (l) { write(this, l); };
 
-  return through(onData, function end () { feed(this); });
+    return through(onData, function end () { feed(this); });
 };
