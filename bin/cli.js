@@ -15,7 +15,7 @@ if (argv.realTime === 'false') argv.realTime = false;
 if (process.stdout.isTTY && !argv.hasOwnProperty('realTime')) {
   argv.realTime = true;
 }
-if (typeof argv.realTime !== 'number') argv.realTime = 500;
+if (argv.realTime && typeof argv.realTime !== 'number') argv.realTime = 500;
 var split = require('split');
 var gnomon = require('../');
 process.stdin.pipe(split())
