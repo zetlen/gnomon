@@ -7,9 +7,14 @@ var argv = require('minimist')(process.argv.slice(2), {
     'type': 't',
     'ignoreBlank': ['ignore-blank','quiet','q','i'],
     'high': 'h',
-    'medium': 'm'
+    'medium': 'm',
+    'realTime': ['real-time', 'r']
   }
 });
+if (process.stdout.isTTY && !argv.realTime) {
+  argv.realTime = true;
+}
+if (argv.realTime === true) argv.realTime = 500;
 var split = require('split');
 var gnomon = require('../');
 process.stdin.pipe(split())
