@@ -51,7 +51,6 @@ var bar = space + chalk.reset.inverse(' ') + space;
 var totalLabel = 'Total';
 
 module.exports = function(opts) {
-
   opts = opts || {};
   var fmt = opts.format || 'H:i:s.u O';
   var type = opts.type || 'elapsed-line';
@@ -166,6 +165,7 @@ module.exports = function(opts) {
   } else {
     feed = function(stream, line, last) {
       feed = function(stream, line, last) {
+        tick(true);
         if (!last)
           stream.queue(stampLine(createFormattedStamp(), lastLine));
         lastLine = line;

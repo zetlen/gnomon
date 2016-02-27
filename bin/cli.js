@@ -11,10 +11,11 @@ var argv = require('minimist')(process.argv.slice(2), {
     'realTime': ['real-time', 'r']
   }
 });
-if (process.stdout.isTTY && !argv.realTime) {
+if (argv.realTime === 'false') argv.realTime = false;
+if (process.stdout.isTTY && !argv.hasOwnProperty('realTime')) {
   argv.realTime = true;
 }
-if (argv.realTime === true) argv.realTime = 500;
+if (typeof argv.realTime !== 'number') argv.realTime = 500;
 var split = require('split');
 var gnomon = require('../');
 process.stdin.pipe(split())
