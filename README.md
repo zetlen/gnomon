@@ -7,7 +7,7 @@ processes where you'd like a historical record of what's taking so long.
 
 ## Example
 
-![gnomonbasic](https://github.paypal.com/github-enterprise-assets/0001/4863/0001/4054/39c069be-d724-11e5-9652-b61b26073fc1.gif)
+![basic](https://github.paypal.com/github-enterprise-assets/0001/4863/0001/4356/867493e2-dce8-11e5-8a88-2e1b9d05f031.gif)
 
 Piping anything to `gnomon` will prepend a timestamp to each line, indicating 
 how long that line was the last line in the buffer--that is, how long it took
@@ -15,16 +15,21 @@ the next line to appear. By default, `gnomon` will display the seconds elapsed
 between each line, but that is configurable.
 
 You can display total time elapsed since the process begain:
-![gnomoneltotal](https://github.paypal.com/github-enterprise-assets/0001/4863/0001/4056/39c33e14-d724-11e5-9ae9-ef18daf02a2f.gif)
+![total](https://github.paypal.com/github-enterprise-assets/0001/4863/0001/4354/86704e86-dce8-11e5-9973-a4647bbcf46e.gif)
 
 You can display an absolute timestamp:
-![gnomonabsolute](https://github.paypal.com/github-enterprise-assets/0001/4863/0001/4055/39c15e00-d724-11e5-8569-4ed7295932e0.gif)
+![absolute](https://github.paypal.com/github-enterprise-assets/0001/4863/0001/4353/86702406-dce8-11e5-8393-1b497d196a59.gif)
 
 You can also use the `--high` and/or `--medium` options to specify a length
 threshold in seconds, over which `gnomon` will highlight the timestamp in red
 or yellow. And you can do a few other things, too.
 
-![gnomonfancy](https://github.paypal.com/github-enterprise-assets/0001/4863/0001/4057/39c7d4e2-d724-11e5-85b5-beba5ef0dfa5.gif)
+![fancy](https://github.paypal.com/github-enterprise-assets/0001/4863/0001/4355/86730284-dce8-11e5-8c92-3263dc0c956e.gif)
+
+If the realtime timestamp updating is distracting or incompatible with your
+terminal, it can be disabled:
+
+![norealtime](https://github.paypal.com/github-enterprise-assets/0001/4863/0001/4357/40a5c9ba-dcea-11e5-8184-34bdae65acbd.gif)
 
 ## Options
 
@@ -53,6 +58,16 @@ or yellow. And you can do a few other things, too.
       display the total time between that line and the next non-blank line
       (if the type is elapsed-time was selected).
 
+	--real-time=<number|false>                          [default: 500]
+	-r                                                  [non-tty default: false]
+
+	  Time increment to use when updating timestamp for the current line, in
+	  milliseconds. Pass `false` to this option to disable realtime entirely,
+	  if you need an extra performance boost or you find it distracting. When
+	  realtime is disabled, the log will always appear one line "behind" the
+	  original piped output, since it can't display the line until it's
+	  finished timing it.
+
     --high=seconds
     -h seconds
 
@@ -68,8 +83,15 @@ or yellow. And you can do a few other things, too.
       colors the timestamp bright yellow instead. Can be used in conjunction
       with a high threshold for three levels.
 
-If a `high` and/or a `medium` threshold are specified, then all timestamps not
+### Notes
+ - If a `high` and/or a `medium` threshold are specified, then all timestamps not
 meeting that threshold will be colored bright green.
+ - If you pipe the output of `gnomon` into another command or a file (that is,
+ not a tty) then the `real-time` option will be disabled by default and each line
+ will appear only after it has been timed. You can force realtime by sending a
+ `--real-time=<ms>` argument explicitly, but the ANSI codes would probably
+ interfere with whatever you were trying to do. The sane default is to omit fancy
+ stuff, like colors and escape sequences, when logging text directly to a file.
 
 ## Installation
 
