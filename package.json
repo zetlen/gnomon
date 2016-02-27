@@ -1,6 +1,6 @@
 {
   "name": "gnomon",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Utility to annotate console logging statements with timestamps and find slow processes",
   "main": "index.js",
   "bin": {
