@@ -1,51 +1,83 @@
+var repeating = require('repeating');
 var dateutil = require('dateutil');
 var chalk = require('chalk');
 var through = require('through');
+
 var termwidth = require('window-size').width;
-var nullString = '';
 var newline = require('os').EOL;
 var ansi = {
   prefix: '\x1b[',
   up: 'A',
   clearLine: '0G'
 };
+
+var nanoPow = Math.pow(10,9);
+function durationToSeconds(dur) {
+  return dur[0] + dur[1] / nanoPow;
+}
+
 var space = ' ';
 var sAbbr = 's';
 var places = 4;
-var maxDurLen = 6 + places; // up to 9999.9999s
-var spacePads = Array(20).join(space).split('').map(function(s, i) {
-  return Array(i + 1).join(space);
-});
+var maxDisplaySecondsDigits = 4;
+function formatDuration(dur) {
+  return durationToSeconds(dur).toFixed(places) + sAbbr;
+}
+
+var start = process.hrtime();
+var elapsedLine = [0,0];
+var elapsedTotal = [0,0];
+var lap = start;
+var last = start;
+function tick(resetLine) {
+  var now = process.hrtime();
+  if (resetLine) {
+    lap = now;
+    elapsedLine = process.hrtime(last);
+  } else {
+    elapsedLine = process.hrtime(lap);
+  }
+  elapsedTotal = process.hrtime(start);
+  last = process.hrtime();
+}
+
+var nullString = '';
+function padFor(s, max) {
+  var l = s.length;
+  return l < max ? repeating(space, max - l) : nullString;
+}
+
+var bar = space + chalk.reset.inverse(' ') + space;
+var totalLabel = 'Total';
 
 module.exports = function(opts) {
+
+  opts = opts || {};
   var fmt = opts.format || 'H:i:s.u O';
-  var start = process.hrtime();
-  var elapsed = start;
-  var elapsedTotal = start;
-  var last = start;
-  var bar = chalk.reset.inverse(' ');
-  var spacedBar = space + bar + space;
-  var blank = Array(maxDurLen).join(space) + spacedBar;
-  var totalLabel = 'Total';
-  var totalPrefix = padFor(totalLabel) + totalLabel;
-  var maxLineLength = termwidth - chalk.stripColor(blank).length;
-  var nanoPow = Math.pow(10,9);
-  opts.type = opts.type || 'elapsed-line';
-  function durationToSeconds(dur) {
-    return dur[0] + dur[1] / nanoPow;
+  var type = opts.type || 'elapsed-line';
+
+  var stampers = {
+    'elapsed-line': function() {
+      return formatDuration(elapsedLine);
+    },
+    'elapsed-total': function() {
+      return formatDuration(elapsedTotal);
+    },
+    'absolute': function() {
+        return dateutil.format(new Date(), fmt);
+    }
+  };
+
+  var maxDurLength, blank, maxLineLength;
+  if (type === 'absolute') {
+    maxDurLength = stampers.absolute().length;
+  } else {
+    maxDurLength = maxDisplaySecondsDigits + places + 2; // dot and 's'
   }
-  function tick() {
-    elapsed = process.hrtime(last);
-    elapsedTotal = process.hrtime(start);
-    last = process.hrtime();
-  }
-  function formatDuration(dur) {
-    return durationToSeconds(dur).toFixed(places) + sAbbr;
-  }
-  function padFor(s) {
-    var l = s.length;
-    return l < maxDurLen ? spacePads[maxDurLen - 1 - l] : nullString;
-  }
+  maxDurLength = Math.max(maxDurLength, totalLabel.length);
+  blank = repeating(space, maxDurLength) + bar;
+  maxLineLength = termwidth - chalk.stripColor(blank).length;
+
   function stampLine(stamp, line) {
     var len = line ? chalk.stripColor(line).length : 0;
     if (len > maxLineLength) {
@@ -55,26 +87,12 @@ module.exports = function(opts) {
     return stamp + line + newline;
   }
 
-  var stampers = {
-    'elapsed-line': function() {
-      return formatDuration(elapsed);
-    },
-    'elapsed-total': function() {
-      return formatDuration(elapsedTotal);
-    },
-    'absolute': function() {
-      return dateutil.format(new Date(), fmt);
-    }
-  };
-
-  var createStampTime = stampers[opts.type] || stampers['elapsed-line'];
-
   var colorStamp;
   var high = opts.high;
   var medium = opts.medium;
   if (medium && high) {
-    colorStamp = function(stamp, value) {
-      var seconds = durationToSeconds(value || elapsed);
+    colorStamp = function(stamp) {
+      var seconds = durationToSeconds(elapsedLine);
       if (seconds >= high) {
         return chalk.reset.red(stamp);
       }
@@ -84,15 +102,15 @@ module.exports = function(opts) {
       return chalk.reset.green(stamp);
     };
   } else if (medium) {
-    colorStamp = function(stamp, value) {
-      if (durationToSeconds(value || elapsed) >= medium) {
+    colorStamp = function(stamp) {
+      if (durationToSeconds(elapsedLine) >= medium) {
         return chalk.reset.yellow(stamp);
       }
       return chalk.reset.green(stamp);
     }
   } else if (high) {
-    colorStamp  = function(stamp, value) {
-      if (durationToSeconds(value || elapsed) >= high) {
+    colorStamp  = function(stamp) {
+      if (durationToSeconds(elapsedLine) >= high) {
         return chalk.reset.red(stamp);
       }
       return chalk.reset.green(stamp);
@@ -103,85 +121,74 @@ module.exports = function(opts) {
     }
   }
 
-  var formatStamp = (opts.type === 'absolute')
-    ? function(s, v) {
-      function fmt(s, v) {
-        return colorStamp(s, v) + spacedBar;
-      }
-      // hack to detect the length of the timestamp and then optimize
-      var blankPad = Array(s.length + 1).join(space);
-      blank = blankPad + spacedBar;
-      maxLineLength = termwidth - chalk.stripColor(blank).length;
-      totalPrefix = blankPad.slice(totalLabel.length) + totalLabel;
-      formatStamp = fmt;
-      return fmt(s, v);
-    }
-    : function(s, v) {
-      return padFor(s) + colorStamp(s, v) + spacedBar;
-    };
+  var createStamp = stampers[type];
 
+  function createFormattedStamp(text, value) {
+    var text = createStamp();
+    return padFor(text, maxDurLength) + colorStamp(text, value) + bar;
+  }
 
-    var lastLine = false;
-    var overwrite;
-    var autoUpdate;
-    function scheduleAutoUpdate(stream) {
-      autoUpdate = setTimeout(function() {
-        var stamp;
-        var elapsedLast = process.hrtime(last);
-        if (opts.type === 'elapsed-line') {
-          stamp = formatStamp(formatDuration(elapsedLast), elapsedLast);
-        } else {
-          stamp = formatStamp(createStampTime());
-        }
-        stream.queue(overwrite + stampLine(stamp, lastLine));
+  var lastLine = false;
+  var overwrite;
+  var autoUpdate;
+  function scheduleAutoUpdate(stream) {
+    autoUpdate = setTimeout(function() {
+      tick(false);
+      stream.queue(
+        overwrite + stampLine(createFormattedStamp(), lastLine)
+      );
+      scheduleAutoUpdate(stream);
+    }, opts.realTime);
+  }
+  function setLastLine(line) {
+    lastLine = line;
+    overwrite = ansi.prefix + (~~(lastLine.length / maxLineLength) + 1) +
+      ansi.up + ansi.prefix + ansi.clearLine;
+  }
+
+  var feed;
+  if (opts.realTime) {
+    feed = function(stream, line, last) {
+      feed = function(stream, line, last) {
+        stream.queue(
+          overwrite + stampLine(createFormattedStamp(), lastLine)
+        );
+        tick(true);
+        if (autoUpdate) clearTimeout(autoUpdate);
         scheduleAutoUpdate(stream);
-      }, opts.realTime);
+        setLastLine(line);
+        if (!last) stream.queue(stampLine(blank, line));
+      };
+      stream.queue(stampLine(blank, line));
+      setLastLine(line);
+      scheduleAutoUpdate(stream);
     }
-    function setLastLine(line) {
+  } else {
+    feed = function(stream, line, last) {
+      feed = function(stream, line, last) {
+        if (!last)
+          stream.queue(stampLine(createFormattedStamp(), lastLine));
+        lastLine = line;
+      };
       lastLine = line;
-      overwrite = ansi.prefix + (~~(lastLine.length / maxLineLength) + 1) +
-        ansi.up + ansi.prefix + ansi.clearLine;
     }
+  }
 
-    var feed = opts.realTime
-      ? function(stream, line) {
-          feed = function(stream, line, last) {
-            stream.queue(
-              overwrite + stampLine(formatStamp(createStampTime()), lastLine)
-            );
-            if (autoUpdate) clearTimeout(autoUpdate);
-            scheduleAutoUpdate(stream);
-            setLastLine(line);
-            if (!last) stream.queue(stampLine(blank, line));
-          };
-          stream.queue(stampLine(blank, line));
-          setLastLine(line);
-          scheduleAutoUpdate(stream);
-      }
-      : function(stream, line) {
-          feed = function(stream, line, last) {
-            if (!last)
-              stream.queue(stampLine(formatStamp(createStampTime()), lastLine));
-            lastLine = line;
-          };
-          lastLine = line;
-      };
+  var onData;
+  if (opts.ignoreBlank) {
+    onData = function(line) { if (line) feed(this, line); }
+  } else {
+    onData = function(line) { feed(this, line); }
+  }
 
-    var onData = (opts.ignoreBlank)
-      ? function (line) {
-        if (line) {
-          tick();
-          feed(this, line);
-        }
-      }
-      : function (line) {
-        tick();
-        feed(this, line || '');
-      };
+  return through(onData, function end () {
+    feed(this, '', true);
+    this.queue(
+      stampLine(blank, '') +
+      padFor(totalLabel, maxDurLength) + totalLabel + bar +
+        formatDuration(elapsedTotal) + newline
+    );
+    if (autoUpdate) clearTimeout(autoUpdate);
+  });
 
-    return through(onData, function end () {
-      feed(this, '', true);
-      this.queue(totalPrefix + spacedBar + formatDuration(elapsedTotal) + newline);
-      if (autoUpdate) clearTimeout(autoUpdate);
-    });
 };
