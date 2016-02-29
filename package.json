@@ -25,7 +25,7 @@
     "name": "James Zetlen",
     "email": "jzetlen@paypal.com"
   },
-  "license": "Apache-2.0",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.paypal.com/jzetlen/gnomon/issues"
   },
