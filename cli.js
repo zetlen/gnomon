@@ -20,3 +20,4 @@ var gnomon = require('./');
 process.stdin.pipe(split())
 .pipe(gnomon(argv))
 .pipe(process.stdout);
+process.stdout.on('error', process.exit);

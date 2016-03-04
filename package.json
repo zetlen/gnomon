@@ -7,7 +7,7 @@
     "gnomon": "./bin/gnomon"
   },
   "scripts": {
-    "test": "node test/timer.js | ./bin/gnomon"
+    "test": "node test/timer.js | ./bin/gnomon | node test/validator.js"
   },
   "repository": {
     "type": "git",
