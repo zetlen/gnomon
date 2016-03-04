@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 var argv = require('minimist')(process.argv.slice(2), {
   string: ['format','type'],
   boolean: ['ignore-blank', 'ignoreBlank'],
@@ -17,7 +16,7 @@ if (process.stdout.isTTY && !argv.hasOwnProperty('realTime')) {
 }
 if (argv.realTime && typeof argv.realTime !== 'number') argv.realTime = 500;
 var split = require('split');
-var gnomon = require('../');
+var gnomon = require('./');
 process.stdin.pipe(split())
 .pipe(gnomon(argv))
 .pipe(process.stdout);

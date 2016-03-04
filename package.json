@@ -4,10 +4,10 @@
   "description": "Utility to annotate console logging statements with timestamps and find slow processes",
   "main": "index.js",
   "bin": {
-    "gnomon": "./bin/cli.js"
+    "gnomon": "./bin/gnomon"
   },
   "scripts": {
-    "test": "node test/timer.js | bin/cli.js -m 3.45 -h 3.5"
+    "test": "node test/timer.js | ./bin/gnomon"
   },
   "repository": {
     "type": "git",
