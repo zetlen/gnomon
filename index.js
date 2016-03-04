@@ -149,6 +149,7 @@ module.exports = function(opts) {
   if (opts.realTime) {
     feed = function(stream, line, last) {
       feed = function(stream, line, last) {
+        tick(false);
         stream.queue(
           overwrite + stampLine(createFormattedStamp(), lastLine)
         );

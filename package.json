@@ -7,7 +7,7 @@
     "gnomon": "./bin/cli.js"
   },
   "scripts": {
-    "test": "node test/timer.js 500 10000 | bin/cli.js -m 3 -h 8"
+    "test": "node test/timer.js | bin/cli.js -m 3.45 -h 3.5"
   },
   "repository": {
     "type": "git",
