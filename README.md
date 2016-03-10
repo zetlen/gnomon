@@ -99,3 +99,7 @@ with npm do:
 ```
 npm install -g gnomon
 ```
+
+## License
+
+gnomon uses the [MIT license](LICENSE.txt).
