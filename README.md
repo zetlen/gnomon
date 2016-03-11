@@ -24,7 +24,7 @@ You can also use the `--high` and/or `--medium` options to specify a length
 threshold in seconds, over which `gnomon` will highlight the timestamp in red
 or yellow. And you can do a few other things, too.
 
-![fancy](https://cloud.githubusercontent.com/assets/1643758/13685025/1bbf6ad6-e6d4-11e5-8806-e90a6e852bf7.gif))
+![fancy](https://cloud.githubusercontent.com/assets/1643758/13685025/1bbf6ad6-e6d4-11e5-8806-e90a6e852bf7.gif)
 
 If the realtime timestamp updating is distracting or incompatible with your
 terminal, it can be disabled:
