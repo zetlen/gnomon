@@ -1,0 +1,115 @@
+.TH "GNOMON" "" "November 2016" "" ""
+.SH "NAME"
+\fBgnomon\fR
+.P
+A command line utility, a bit like
+moreutils's \fBts\fR \fIhttps://joeyh\.name/code/moreutils/\fR, to prepend timestamp
+information to the standard output of another command\. Useful for long\-running
+processes where you'd like a historical record of what's taking so long\.
+.SH Example
+.P
+basic \fIhttps://cloud\.githubusercontent\.com/assets/1643758/13685018/17b4f76c\-e6d4\-11e5\-8838\-40fa52346ae8\.gif\fR
+.P
+Piping anything to \fBgnomon\fP will prepend a timestamp to each line, indicating 
+how long that line was the last line in the buffer\-\-that is, how long it took
+the next line to appear\. By default, \fBgnomon\fP will display the seconds elapsed
+between each line, but that is configurable\.
+.P
+You can display total time elapsed since the process began:
+total \fIhttps://cloud\.githubusercontent\.com/assets/1643758/13685020/199b78b2\-e6d4\-11e5\-9083\-05de6c52cc60\.gif\fR
+.P
+You can display an absolute timestamp:
+absolute \fIhttps://cloud\.githubusercontent\.com/assets/1643758/13685022/1ab3a5bc\-e6d4\-11e5\-9ccf\-3a5c68f9ea0c\.gif\fR
+.P
+You can also use the \fB\-\-high\fP and/or \fB\-\-medium\fP options to specify a length
+threshold in seconds, over which \fBgnomon\fP will highlight the timestamp in red
+or yellow\. And you can do a few other things, too\.
+.P
+fancy \fIhttps://cloud\.githubusercontent\.com/assets/1643758/13685025/1bbf6ad6\-e6d4\-11e5\-8806\-e90a6e852bf7\.gif\fR
+.P
+If the realtime timestamp updating is distracting or incompatible with your
+terminal, it can be disabled:
+.P
+norealtime \fIhttps://cloud\.githubusercontent\.com/assets/1643758/13685027/1cfd823e\-e6d4\-11e5\-9f90\-c047d67a35e0\.gif\fR
+.SH Options
+.P
+.RS 2
+.nf
+\-\-type=<elapsed\-line|elapsed\-total|absolute>        [default: elapsed\-line]
+\-t <elapsed\-line|elapsed\-total|absolute>
+
+  Type of timestamp to display\.
+    elapsed\-line: Number of seconds that displayed line was the last line\.
+    elapsed\-total: Number of seconds since the start of the process\.
+    absolute: An absolute timestamp in UTC\.
+
+\-\-format="format"                                   [default: "H:i:s\.u O"]
+\-f "format"
+
+  Format the absolute timestamp, using PHP date format strings\. If the type
+  is elapsed\-line or elapsed\-total, this option is ignored\.
+
+\-\-ignore\-blank                                      [default: false]
+\-\-quiet
+\-q
+\-i
+
+  Do not prepend a timestamp to blank lines; just pass them through\. When
+  this option is active, blank lines will not trigger an update of elapsed
+  time\. Therefore, if a lot of blank lines appear, the prior timestamp will
+  display the total time between that line and the next non\-blank line
+  (if the type is elapsed\-time was selected)\.
+
+\-\-real\-time=<number|false>                          [default: 500]
+\-r                                                  [non\-tty default: false]
+
+  Time increment to use when updating timestamp for the current line, in
+  milliseconds\. Pass `false` to this option to disable realtime entirely,
+  if you need an extra performance boost or you find it distracting\. When
+  realtime is disabled, the log will always appear one line "behind" the
+  original piped output, since it can't display the line until it's
+  finished timing it\.
+
+\-\-high=seconds
+\-h seconds
+
+  High threshold\. If the elapsed time for a line is equal to or higher than
+  this value in seconds, then the timestamp will be colored bright red\.
+  This works for all timestamp types, including elapsed\-total and absolute,
+  where the elapsed line time is not actually displayed\.
+
+\-\-medium=seconds
+\-m seconds
+
+  Medium threshold\. Works just like the high threshold described above, but
+  colors the timestamp bright yellow instead\. Can be used in conjunction
+  with a high threshold for three levels\.
+.fi
+.RE
+.SS Notes
+.RS 0
+.IP \(bu 2
+If a \fBhigh\fP and/or a \fBmedium\fP threshold are specified, then all timestamps not
+meeting that threshold will be colored bright green\.
+.IP \(bu 2
+If you pipe the output of \fBgnomon\fP into another command or a file (that is,
+not a tty) then the \fBreal\-time\fP option will be disabled by default and each line
+will appear only after it has been timed\. You can force realtime by sending a
+\fB\-\-real\-time=<ms>\fP argument explicitly, but the ANSI codes would probably
+interfere with whatever you were trying to do\. The sane default is to omit fancy
+stuff, like colors and escape sequences, when logging text directly to a file\.
+
+.RE
+.SH Installation
+.P
+with npm do:
+.P
+.RS 2
+.nf
+npm install \-g gnomon
+.fi
+.RE
+.SH License
+.P
+gnomon uses the MIT license\.
+

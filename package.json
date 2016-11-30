@@ -6,8 +6,10 @@
   "bin": {
     "gnomon": "./bin/gnomon"
   },
+  "man": "./doc/gnomon.1",
   "scripts": {
-    "test": "node test/timer.js | ./bin/gnomon | node test/validator.js"
+    "test": "node test/timer.js | ./bin/gnomon | node test/validator.js",
+    "docs": "node meta/make-docs.js && marked-man README.md > ./doc/gnomon.1"
   },
   "repository": {
     "type": "git",
@@ -33,10 +35,13 @@
   "dependencies": {
     "chalk": "^1.1.1",
     "dateutil": "^0.1.0",
-    "minimist": "^1.2.0",
+    "meow": "^3.7.0",
     "repeating": "^2.0.0",
     "split": "^1.0.0",
     "through": "^2.3.8",
     "window-size": "^0.2.0"
+  },
+  "devDependencies": {
+    "marked-man": "^0.1.6"
   }
 }
