@@ -1,4 +1,4 @@
-var meow = require('meow');
+var minimist = require('minimist');
 var usage = __USAGE__;
 var intro = [
   '',
@@ -13,8 +13,8 @@ var intro = [
   '  any-command-to-be-timed | gnomon --type=elapsed-total --high=8.0',
   '',
   ''
-];
-var cli = meow(intro.join('\n') + usage, {
+].join('\n  ') + usage;
+var cli = minimist(process.argv, {
   string: ['format','type'],
   boolean: ['ignore-blank', 'ignoreBlank'],
   alias: {
@@ -28,18 +28,17 @@ var cli = meow(intro.join('\n') + usage, {
 });
 if (process.stdin.isTTY) {
   console.error('Error: You must pipe another command\'s output to gnomon with |.');
-  console.log(intro.join('\n  '));
+  console.log(intro);
   process.exit(1);
 }
-var flags = cli.flags;
-if (flags.realTime === 'false') flags.realTime = false;
-if (process.stdout.isTTY && !flags.hasOwnProperty('realTime')) {
-  flags.realTime = true;
+if (cli.realTime === 'false') cli.realTime = false;
+if (process.stdout.isTTY && !cli.hasOwnProperty('realTime')) {
+  cli.realTime = true;
 }
-if (flags.realTime && typeof flags.realTime !== 'number') flags.realTime = 500;
+if (cli.realTime && typeof cli.realTime !== 'number') cli.realTime = 500;
 var split = require('split');
 var gnomon = require('./');
 process.stdin.pipe(split())
-.pipe(gnomon(flags))
+.pipe(gnomon(cli))
 .pipe(process.stdout);
 process.stdout.on('error', process.exit);
