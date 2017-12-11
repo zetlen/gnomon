@@ -8,8 +8,12 @@
   },
   "man": "./doc/gnomon.1",
   "scripts": {
-    "test": "node test/timer.js | ./bin/gnomon | node test/validator.js",
-    "docs": "node meta/make-docs.js && marked-man README.md > ./doc/gnomon.1"
+    "test:shell": "node test/shell/timer.js | ./bin/gnomon | node test/shell/measure.js",
+    "test:unit": "tap test/*.t.js",
+    "test": "npm run -s test:shell && npm run -s test:unit",
+    "docs": "node meta/make-docs.js && marked-man README.md > ./doc/gnomon.1",
+    "prebundle": "npm run -s test && npm run -s docs",
+    "bundle": "nexe "
   },
   "repository": {
     "type": "git",
@@ -42,6 +46,10 @@
     "window-size": "^0.2.0"
   },
   "devDependencies": {
-    "marked-man": "^0.1.6"
+    "concat-stream": "^1.6.0",
+    "marked-man": "^0.1.6",
+    "nexe": "^2.0.0-rc.20",
+    "tap": "^11.0.0",
+    "through2": "^2.0.3"
   }
 }
